@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block title %}Recommendations for "{{ query }}" - BookVerse{% endblock %}
+
+{% block content %}
+<section class="section-container">
+    <!-- Header Banner -->
+    <div class="results-header-card">
+        <div class="results-title-group">
+            <a href="/" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Home</a>
+            <div>
+                <h1 class="results-heading">Recommendations for <span class="gradient-text">"{{ query }}"</span></h1>
+                <p class="results-subtext">{{ message }}</p>
+            </div>
+        </div>
+
+        {% if metrics %}
+        <div class="header-action-group">
+            <a href="/sentiment_analysis?query={{ query|urlencode }}" class="btn-analytics">
+                <i class="fa-solid fa-chart-line"></i> View Detailed Sentiment Dashboard
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if books and metrics %}
+    <!-- Quick Sentiment Summary Strip -->
+    <div class="sentiment-summary-strip">
+        <div class="summary-stat positive">
+            <span class="stat-icon"><i class="fa-solid fa-face-smile"></i></span>
+            <div class="stat-info">
+                <span class="stat-value">{{ metrics.positive_count }} Books</span>
+                <span class="stat-label">Positive Sentiment ({{ metrics.positive_pct }}%)</span>
+            </div>
+        </div>
+
+        <div class="summary-stat neutral">
+            <span class="stat-icon"><i class="fa-solid fa-face-meh"></i></span>
+            <div class="stat-info">
+                <span class="stat-value">{{ metrics.neutral_count }} Books</span>
+                <span class="stat-label">Neutral Sentiment ({{ metrics.neutral_pct }}%)</span>
+            </div>
+        </div>
+
+        <div class="summary-stat negative">
+            <span class="stat-icon"><i class="fa-solid fa-face-frown"></i></span>
+            <div class="stat-info">
+                <span class="stat-value">{{ metrics.negative_count }} Books</span>
+                <span class="stat-label">Negative Sentiment ({{ metrics.negative_pct }}%)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommended Books List -->
+    <div class="recommendations-grid">
+        {% for book in books %}
+        <div class="rec-card">
+            <div class="rec-card-sidebar">
+                <div class="cover-box">
+                    <img 
+                        src="{{ book.image }}" 
+                        alt="{{ book.title }}" 
+                        class="rec-cover"
+                        loading="lazy"
+                        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';"
+                    >
+                    <span class="score-badge">
+                        <i class="fa-solid fa-bullseye"></i> 
+                        {% if book.score %}{{ book.score }}% Match{% else %}Featured Match{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="rec-card-body">
+                <div class="rec-header">
+                    <div>
+                        <span class="rec-type-tag">
+                            <i class="fa-solid fa-network-wired"></i> 
+                            {{ book.rec_type if book.rec_type else 'Recommended Book' }}
+                        </span>
+                        <h2 class="rec-title">{{ book.title }}</h2>
+                        <p class="rec-author"><i class="fa-solid fa-user-pen"></i> Author: <strong>{{ book.author }}</strong></p>
+                    </div>
+
+                    <div class="sentiment-badge-wrapper">
+                        <span class="sentiment-badge {{ book.sentiment.badge_class }}">
+                            {% if book.sentiment.category == 'Positive' %}
+                                <i class="fa-solid fa-circle-check"></i> Positive
+                            {% elif book.sentiment.category == 'Negative' %}
+                                <i class="fa-solid fa-circle-exclamation"></i> Negative
+                            {% else %}
+                                <i class="fa-solid fa-circle-minus"></i> Neutral
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="meta-row">
+                    <span><i class="fa-solid fa-building"></i> {{ book.publisher }}</span>
+                    <span><i class="fa-solid fa-calendar-days"></i> {{ book.year }}</span>
+                </div>
+
+                {% if book.description %}
+                <!-- Book Description Box -->
+                <div class="book-description-box">
+                    <p class="description-label"><i class="fa-solid fa-align-left"></i> <strong>Description:</strong></p>
+                    <p class="description-text">{{ book.description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Sentiment Polarity Bar -->
+                <div class="polarity-container">
+                    <div class="polarity-header">
+                        <span>Sentiment Score: <strong>{{ book.sentiment.polarity }}</strong> (Subjectivity: {{ book.sentiment.subjectivity }})</span>
+                        <span>{{ book.sentiment.polarity_pct }}% Positive Scale</span>
+                    </div>
+                    <div class="polarity-track">
+                        <div class="polarity-fill {{ book.sentiment.badge_class }}" style="width: calc({{ book.sentiment.polarity_pct }}%);"></div>
+                    </div>
+                </div>
+
+                <!-- Sample Review Snippet -->
+                <div class="review-quote-box">
+                    <i class="fa-solid fa-quote-left quote-icon"></i>
+                    <p class="review-text">{{ book.sample_review }}</p>
+                </div>
+
+                <div class="rec-card-actions">
+                    <a href="/recommend?query={{ book.title|urlencode }}" class="btn-rec-deeper">
+                        Find Books Like This <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state-card">
+        <i class="fa-solid fa-book-open-reader empty-icon"></i>
+        <h2>No Recommendations Found</h2>
+        <p>{{ message }}</p>
+        <a href="/" class="btn-primary-action"><i class="fa-solid fa-house"></i> Return to Discover</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

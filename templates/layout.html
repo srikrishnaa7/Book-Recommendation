@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BookVerse - Intelligent Book Recommendations & Sentiment Analytics{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Main Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation Header -->
+        <header class="navbar">
+            <div class="nav-container">
+                <a href="/" class="brand-logo">
+                    <i class="fa-solid fa-book-bookmark logo-icon"></i>
+                    <span class="brand-name">Book<span class="highlight">Verse</span></span>
+                </a>
+
+                <nav class="nav-links">
+                    <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+                        <i class="fa-solid fa-compass"></i> Discover
+                    </a>
+                    <a href="/sentiment_analysis" class="nav-item {% if request.path == '/sentiment_analysis' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-pie"></i> Sentiment Dashboard
+                    </a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Body -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-container">
+                <div class="footer-brand">
+                    <p class="footer-logo"><i class="fa-solid fa-book-open"></i> BookVerse Recommender</p>
+                    <p class="footer-tagline">AI-Powered Hybrid Collaborative & Content-Based Book Discovery</p>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2026 BookVerse Project. Powered by Scikit-Learn & TextBlob.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Client JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

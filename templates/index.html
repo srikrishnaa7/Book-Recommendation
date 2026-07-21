@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% block title %}BookVerse - Discover Books & Sentiment Intelligence{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Search -->
+<section class="hero-section">
+    <div class="hero-backdrop"></div>
+    <div class="hero-content">
+        <span class="hero-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommender Engine</span>
+        <h1 class="hero-title">Find Your Next <span class="gradient-text">Favorite Book</span></h1>
+        <p class="hero-subtitle">Explore hybrid collaborative & content-based recommendations enriched with NLP sentiment analysis.</p>
+
+        <!-- Search Form Container -->
+        <div class="search-box-container">
+            <form action="/recommend" method="POST" class="search-form" id="search_form">
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input 
+                        type="text" 
+                        name="query" 
+                        id="search_input" 
+                        class="search-input" 
+                        placeholder="Search by book title, author, or genre..." 
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="submit" class="search-btn">
+                        <span>Get Recommendations</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <!-- Autocomplete Dropdown List -->
+                <div id="autocomplete_dropdown" class="autocomplete-dropdown hidden"></div>
+            </form>
+
+            <!-- Quick Filter / Suggestion Tags -->
+            <div class="quick-tags">
+                <span class="tags-label">Trending Searches:</span>
+                <a href="/recommend?query=Harry+Potter" class="tag-pill">Harry Potter</a>
+                <a href="/recommend?query=The+Hobbit" class="tag-pill">The Hobbit</a>
+                <a href="/recommend?query=1984" class="tag-pill">1984</a>
+                <a href="/recommend?query=The+Da+Vinci+Code" class="tag-pill">The Da Vinci Code</a>
+                <a href="/recommend?query=To+Kill+a+Mockingbird" class="tag-pill">To Kill a Mockingbird</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Books Grid Section -->
+<section class="section-container">
+    <div class="section-header">
+        <div>
+            <h2 class="section-title"><i class="fa-solid fa-fire highlight-icon"></i> Top Rated & Popular Books</h2>
+            <p class="section-desc">Based on over 1,000,000 ratings from active book enthusiasts.</p>
+        </div>
+        <span class="count-pill">{{ popular_books|length }} Books Featured</span>
+    </div>
+
+    <div class="books-grid">
+        {% for book in popular_books %}
+        <div class="book-card">
+            <div class="book-cover-wrapper">
+                <img 
+                    src="{{ book.image }}" 
+                    alt="{{ book.title }}" 
+                    class="book-cover"
+                    loading="lazy"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';"
+                >
+                <div class="rating-badge">
+                    <i class="fa-solid fa-star"></i> {{ book.avg_rating }}
+                </div>
+            </div>
+            
+            <div class="book-info">
+                <h3 class="book-title" title="{{ book.title }}">{{ book.title }}</h3>
+                <p class="book-author"><i class="fa-solid fa-pen-nib"></i> {{ book.author }}</p>
+
+                <div class="book-meta">
+                    <span class="meta-item"><i class="fa-solid fa-building"></i> {{ book.publisher }}</span>
+                    <span class="meta-item"><i class="fa-solid fa-calendar-days"></i> {{ book.year }}</span>
+                </div>
+
+                <div class="card-footer">
+                    <span class="ratings-count"><i class="fa-solid fa-users"></i> {{ "{:,}".format(book.num_ratings) }} votes</span>
+                    <a href="/recommend?query={{ book.title|urlencode }}" class="btn-recommend">
+                        Similar <i class="fa-solid fa-sparkles"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

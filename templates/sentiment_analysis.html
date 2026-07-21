@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+
+{% block title %}Sentiment Analytics Dashboard - BookVerse{% endblock %}
+
+{% block content %}
+<section class="section-container">
+    <!-- Dashboard Header -->
+    <div class="results-header-card">
+        <div class="results-title-group">
+            <a href="{% if query %}/recommend?query={{ query|urlencode }}{% else %}/{% endif %}" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <div>
+                <h1 class="results-heading"><i class="fa-solid fa-chart-pie"></i> Sentiment Analytics <span class="gradient-text">Dashboard</span></h1>
+                <p class="results-subtext">{% if query %}NLP Sentiment breakdown for recommendations of "<strong>{{ query }}</strong>"{% else %}Overall sentiment analytics sample for top recommendations{% endif %}</p>
+            </div>
+        </div>
+
+        <div class="header-action-group">
+            <div class="limit-selector-toolbar">
+                <span class="toolbar-label"><i class="fa-solid fa-sliders"></i> Sample Size:</span>
+                <div class="pill-group">
+                    <a href="/sentiment_analysis?query={{ query|urlencode }}&limit=10" class="limit-pill {% if limit == 10 %}active{% endif %}">10</a>
+                    <a href="/sentiment_analysis?query={{ query|urlencode }}&limit=25" class="limit-pill {% if limit == 25 %}active{% endif %}">25</a>
+                    <a href="/sentiment_analysis?query={{ query|urlencode }}&limit=50" class="limit-pill {% if limit == 50 %}active{% endif %}">50</a>
+                </div>
+            </div>
+            <a href="/" class="btn-analytics"><i class="fa-solid fa-magnifying-glass"></i> New Search</a>
+        </div>
+    </div>
+
+
+    {% if metrics %}
+    <!-- Metric Cards Row -->
+    <div class="dashboard-cards-grid">
+        <div class="dash-card">
+            <div class="dash-card-icon blue"><i class="fa-solid fa-book"></i></div>
+            <div class="dash-card-info">
+                <span class="dash-value">{{ metrics.total_books }}</span>
+                <span class="dash-label">Books Analyzed</span>
+            </div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-card-icon green"><i class="fa-solid fa-face-smile"></i></div>
+            <div class="dash-card-info">
+                <span class="dash-value">{{ metrics.positive_pct }}%</span>
+                <span class="dash-label">Positive Sentiment</span>
+            </div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-card-icon gray"><i class="fa-solid fa-face-meh"></i></div>
+            <div class="dash-card-info">
+                <span class="dash-value">{{ metrics.neutral_pct }}%</span>
+                <span class="dash-label">Neutral Sentiment</span>
+            </div>
+        </div>
+
+        <div class="dash-card">
+            <div class="dash-card-icon red"><i class="fa-solid fa-face-frown"></i></div>
+            <div class="dash-card-info">
+                <span class="dash-value">{{ metrics.negative_pct }}%</span>
+                <span class="dash-label">Negative Sentiment</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Visualization Section -->
+    <div class="charts-grid">
+        <!-- Donut Chart Container -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Sentiment Distribution</h3>
+                <p>Overall ratio of positive, neutral, and negative book descriptions.</p>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="sentimentPieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Bar Chart Container -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <h3><i class="fa-solid fa-chart-column"></i> Book Polarity Scores</h3>
+                <p>Individual TextBlob polarity rating per book (-1.0 to +1.0 scale).</p>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="polarityBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Book Breakdown Table -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h3><i class="fa-solid fa-list-check"></i> Book Sentiment Analysis Details</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Book Cover & Title</th>
+                        <th>Author</th>
+                        <th>Sentiment Class</th>
+                        <th>Polarity</th>
+                        <th>Subjectivity</th>
+                        <th>Sample Review Snippet</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                    <tr>
+                        <td class="book-title-cell">
+                            <img src="{{ book.image }}" alt="{{ book.title }}" class="table-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';">
+                            <div>
+                                <strong>{{ book.title }}</strong>
+                                <span class="table-publisher">{{ book.publisher }} ({{ book.year }})</span>
+                            </div>
+                        </td>
+                        <td>{{ book.author }}</td>
+                        <td>
+                            <span class="sentiment-badge {{ book.sentiment.badge_class }}">
+                                {{ book.sentiment.category }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="table-score">{{ book.sentiment.polarity }}</span>
+                        </td>
+                        <td>
+                            <span class="table-score">{{ book.sentiment.subjectivity }}</span>
+                        </td>
+                        <td class="snippet-cell">
+                            {% if book.description %}
+                            <p class="table-description"><strong>Description:</strong> {{ book.description }}</p>
+                            {% endif %}
+                            <p class="table-review"><em>"{{ book.sample_review }}"</em></p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if metrics and books %}
+<script id="sentiment-data" type="application/json">
+{
+    "labels": {{ metrics.chart_labels | tojson }},
+    "data": {{ metrics.chart_data | tojson }},
+    "colors": {{ metrics.chart_colors | tojson }},
+    "bookTitles": [
+        {% for b in books %}
+            {{ (b.title[:20] ~ ('...' if b.title|length > 20 else '')) | tojson }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    "polarityScores": [
+        {% for b in books %}
+            {{ b.sentiment.polarity }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataElement = document.getElementById('sentiment-data');
+        if (!dataElement) return;
+
+        const sentimentData = JSON.parse(dataElement.textContent);
+
+        // 1. Render Sentiment Pie / Donut Chart
+        const ctxPie = document.getElementById('sentimentPieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: sentimentData.labels,
+                datasets: [{
+                    data: sentimentData.data,
+                    backgroundColor: sentimentData.colors,
+                    borderWidth: 2,
+                    borderColor: '#1e293b'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { family: 'Inter', size: 13 }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Render Polarity Bar Chart per Book
+        const ctxBar = document.getElementById('polarityBarChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: sentimentData.bookTitles,
+                datasets: [{
+                    label: 'Polarity Score',
+                    data: sentimentData.polarityScores,
+                    backgroundColor: sentimentData.polarityScores.map(score => score > 0.05 ? '#10b981' : score < -0.05 ? '#ef4444' : '#6b7280'),
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        min: -1.0,
+                        max: 1.0,
+                        grid: { color: '#334155' },
+                        ticks: { color: '#94a3b8' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', font: { size: 11 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

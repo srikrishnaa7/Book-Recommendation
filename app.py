@@ -1,108 +1,87 @@
-import pandas as pd
-from flask import Flask, render_template, request
-from sklearn.preprocessing import MinMaxScaler
-from sklearn import neighbors
-from sklearn.impute import SimpleImputer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from textblob import TextBlob
-import re
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import os
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+from src.recommender import get_recommender
+from src.sentiment import analyze_books_sentiment
 
 app = Flask(__name__)
 
-df = pd.read_csv('data/books.csv')
-df.columns = df.columns.str.strip()
-
-if 'rating_obj' not in df.columns:
-    print("Column 'rating_obj' not found in the dataset.")
-    rating_df = pd.DataFrame()
-else:
-    rating_df = pd.get_dummies(df['rating_obj'])
-
-if 'categories' not in df.columns:
-    print("Column 'categories' not found in the dataset.")
-    language_df = pd.DataFrame()
-else:
-    language_df = pd.get_dummies(df['categories'])
-
-df.drop(['id', 'num_pages', 'ratings_count', 'subtitle', 'isbn10'], axis=1, inplace=True)
-
-features = pd.concat([rating_df, language_df, df[['average_rating', 'published_year']]], axis=1)
-features.set_index(df['title'], inplace=True)
-
-imputer = SimpleImputer(strategy='mean')
-features_imputed = imputer.fit_transform(features)
-
-scaler = MinMaxScaler()
-features_scaled = scaler.fit_transform(features_imputed)
-
-vectorizer = TfidfVectorizer(stop_words='english')
-tfidf_matrix = vectorizer.fit_transform(df['description'].fillna(''))
-
-cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-
-model = neighbors.NearestNeighbors(n_neighbors=5, algorithm='brute', metric='cosine')
-model.fit(tfidf_matrix)
+# Pre-initialize recommender instance at startup
+recommender = get_recommender()
 
 @app.route('/')
 def index():
-    return render_template('index.html', books=df['title'].unique())
+    popular_books = recommender.get_popular_books(top_n=50)
+    return render_template('index.html', popular_books=popular_books)
 
-@app.route('/recommend', methods=['POST'])
+@app.route('/recommend', methods=['GET', 'POST'])
 def recommend():
-    search_text = request.form['search_text']
-    search_vector = vectorizer.transform([search_text])
+    if request.method == 'POST':
+        query = request.form.get('query', '').strip()
+        limit = int(request.form.get('limit', 10))
+    else:
+        query = request.args.get('query', '').strip()
+        limit = int(request.args.get('limit', 10))
 
-    if not re.search(r'\w', search_text):
-        return render_template('recommendations.html', books=[], message='Please enter valid search words.')
+    if not query:
+        return render_template('recommendations.html', query='', books=[], metrics=None, message="Please enter a book title or keyword to search.", limit=limit)
 
-    distances, indices = model.kneighbors(search_vector, n_neighbors=4)
+    raw_recommendations, message = recommender.recommend(query=query, top_n=limit)
+    
+    if not raw_recommendations:
+        return render_template('recommendations.html', query=query, books=[], metrics=None, message=message, limit=limit)
 
-    recommended_books = []
-    graph_paths = []
+    enriched_books, dashboard_metrics = analyze_books_sentiment(raw_recommendations)
 
-    for i in range(len(indices.flatten())):
-        description = df.iloc[indices.flatten()[i]]['description']
-        sentiment = TextBlob(description).sentiment
-        polarity_category = 'Positive' if sentiment.polarity > 0 else 'Negative' if sentiment.polarity < -0 else 'Neutral'
+    return render_template(
+        'recommendations.html',
+        query=query,
+        books=enriched_books,
+        metrics=dashboard_metrics,
+        message=message,
+        limit=limit
+    )
 
-        # Generate bar graph for sentiment analysis
-        plt.figure(figsize=(6, 4))
-        plt.bar(['Positive', 'Neutral', 'Negative'],
-                [1 if sentiment.polarity > 0 else 0, 1 if -0 <= sentiment.polarity <= 0 else 0, 1 if sentiment.polarity < -0 else 0],
-                color=['green', 'gray', 'red'])
-        plt.ylim([0, 1])
-        plt.title(f"Sentiment Analysis for '{df.iloc[indices.flatten()[i]]['title']}'")
-        img_path = f"static/{df.iloc[indices.flatten()[i]]['title'].replace(' ', '_')}_sentiment.png"
-        plt.savefig(img_path)
-        plt.close()
-
-        graph_paths.append(img_path)
-
-        book_info = {
-            'title': df.iloc[indices.flatten()[i]]['title'],
-            'author': df.iloc[indices.flatten()[i]]['authors'] if 'authors' in df.columns else 'Unknown',
-            'thumbnail': df.iloc[indices.flatten()[i]]['thumbnail'] if 'thumbnail' in df.columns else 'No image available',
-            'description': description,
-            'polarity': sentiment.polarity,
-            'polarity_category': polarity_category,
-            'sentiment_graph': img_path
-        }
-        recommended_books.append(book_info)
-
-    return render_template('recommendations.html', books=recommended_books, graph_paths=graph_paths)
-
-@app.route('/sentiment_analysis')
+@app.route('/sentiment_analysis', methods=['GET'])
 def sentiment_analysis():
-    graph_paths = request.args.getlist('graph_paths')
-    return render_template('sentiment_analysis.html', graph_paths=graph_paths)
+    query = request.args.get('query', '').strip()
+    default_limit = 12 if query else 50
+    limit = int(request.args.get('limit', default_limit))
+    
+    if not query:
+        # Load popular books up to the specified limit (default 50)
+        popular_books = recommender.get_popular_books(top_n=limit)
+        enriched_books, dashboard_metrics = analyze_books_sentiment(popular_books)
+        message = f"Displaying sentiment analysis for top {len(enriched_books)} popular books."
+    else:
+        raw_recommendations, message = recommender.recommend(query=query, top_n=limit)
+        if not raw_recommendations:
+            raw_recommendations = recommender.get_popular_books(top_n=limit)
+        enriched_books, dashboard_metrics = analyze_books_sentiment(raw_recommendations)
+
+    return render_template(
+        'sentiment_analysis.html',
+        query=query,
+        books=enriched_books,
+        metrics=dashboard_metrics,
+        message=message,
+        limit=limit
+    )
+
+
+@app.route('/api/autocomplete', methods=['GET'])
+def autocomplete():
+    query = request.args.get('q', '').strip()
+    if len(query) < 2:
+        return jsonify({'titles': []})
+    
+    matches = recommender.search_autocomplete(query=query, limit=8)
+    return jsonify({'titles': matches})
 
 if __name__ == '__main__':
-    # Ensure the static directory exists
-    if not os.path.exists('static'):
-        os.makedirs('static')
-    app.run(debug=True)
+    # Ensure required directories exist
+    os.makedirs('static/css', exist_ok=True)
+    os.makedirs('static/js', exist_ok=True)
+    os.makedirs('templates', exist_ok=True)
+    
+    print("[Flask] Starting Book Recommendation server...")
+    app.run(debug=True, port=5000)
