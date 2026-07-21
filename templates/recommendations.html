@@ -57,15 +57,10 @@
         <div class="rec-card">
             <div class="rec-card-sidebar">
                 <div class="cover-box">
-                    <img 
-                        src="{{ book.image }}" 
-                        alt="{{ book.title }}" 
-                        class="rec-cover"
-                        loading="lazy"
-                        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';"
-                    >
+                    <img src="{{ book.image }}" alt="{{ book.title }}" class="rec-cover" loading="lazy"
+                        onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';">
                     <span class="score-badge">
-                        <i class="fa-solid fa-bullseye"></i> 
+                        <i class="fa-solid fa-bullseye"></i>
                         {% if book.score %}{{ book.score }}% Match{% else %}Featured Match{% endif %}
                     </span>
                 </div>
@@ -75,21 +70,22 @@
                 <div class="rec-header">
                     <div>
                         <span class="rec-type-tag">
-                            <i class="fa-solid fa-network-wired"></i> 
+                            <i class="fa-solid fa-network-wired"></i>
                             {{ book.rec_type if book.rec_type else 'Recommended Book' }}
                         </span>
                         <h2 class="rec-title">{{ book.title }}</h2>
-                        <p class="rec-author"><i class="fa-solid fa-user-pen"></i> Author: <strong>{{ book.author }}</strong></p>
+                        <p class="rec-author"><i class="fa-solid fa-user-pen"></i> Author: <strong>{{ book.author
+                                }}</strong></p>
                     </div>
 
                     <div class="sentiment-badge-wrapper">
                         <span class="sentiment-badge {{ book.sentiment.badge_class }}">
                             {% if book.sentiment.category == 'Positive' %}
-                                <i class="fa-solid fa-circle-check"></i> Positive
+                            <i class="fa-solid fa-circle-check"></i> Positive
                             {% elif book.sentiment.category == 'Negative' %}
-                                <i class="fa-solid fa-circle-exclamation"></i> Negative
+                            <i class="fa-solid fa-circle-exclamation"></i> Negative
                             {% else %}
-                                <i class="fa-solid fa-circle-minus"></i> Neutral
+                            <i class="fa-solid fa-circle-minus"></i> Neutral
                             {% endif %}
                         </span>
                     </div>
@@ -103,7 +99,8 @@
                 {% if book.description %}
                 <!-- Book Description Box -->
                 <div class="book-description-box">
-                    <p class="description-label"><i class="fa-solid fa-align-left"></i> <strong>Description:</strong></p>
+                    <p class="description-label"><i class="fa-solid fa-align-left"></i> <strong>Description:</strong>
+                    </p>
                     <p class="description-text">{{ book.description }}</p>
                 </div>
                 {% endif %}
@@ -111,11 +108,13 @@
                 <!-- Sentiment Polarity Bar -->
                 <div class="polarity-container">
                     <div class="polarity-header">
-                        <span>Sentiment Score: <strong>{{ book.sentiment.polarity }}</strong> (Subjectivity: {{ book.sentiment.subjectivity }})</span>
+                        <span>Sentiment Score: <strong>{{ book.sentiment.polarity }}</strong> (Subjectivity: {{
+                            book.sentiment.subjectivity }})</span>
                         <span>{{ book.sentiment.polarity_pct }}% Positive Scale</span>
                     </div>
                     <div class="polarity-track">
-                        <div class="polarity-fill {{ book.sentiment.badge_class }}" style="width: calc({{ book.sentiment.polarity_pct }}%);"></div>
+                        <div class="polarity-fill {{ book.sentiment.badge_class }}"
+                            style="width: {{ book.sentiment.polarity_pct }}%;"></div>
                     </div>
                 </div>
 
