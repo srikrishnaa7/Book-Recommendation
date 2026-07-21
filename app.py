@@ -1,20 +1,26 @@
 import os
+import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from src.recommender import get_recommender
 from src.sentiment import analyze_books_sentiment
 
-app = Flask(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Pre-initialize recommender instance at startup
-recommender = get_recommender()
+app = Flask(__name__)
 
 @app.route('/')
 def index():
+    recommender = get_recommender()
     popular_books = recommender.get_popular_books(top_n=50)
     return render_template('index.html', popular_books=popular_books)
 
 @app.route('/recommend', methods=['GET', 'POST'])
 def recommend():
+    recommender = get_recommender()
     if request.method == 'POST':
         query = request.form.get('query', '').strip()
         limit = int(request.form.get('limit', 10))
@@ -43,6 +49,7 @@ def recommend():
 
 @app.route('/sentiment_analysis', methods=['GET'])
 def sentiment_analysis():
+    recommender = get_recommender()
     query = request.args.get('query', '').strip()
     default_limit = 12 if query else 50
     limit = int(request.args.get('limit', default_limit))
@@ -70,6 +77,7 @@ def sentiment_analysis():
 
 @app.route('/api/autocomplete', methods=['GET'])
 def autocomplete():
+    recommender = get_recommender()
     query = request.args.get('q', '').strip()
     if len(query) < 2:
         return jsonify({'titles': []})
@@ -83,5 +91,5 @@ if __name__ == '__main__':
     os.makedirs('static/js', exist_ok=True)
     os.makedirs('templates', exist_ok=True)
     
-    print("[Flask] Starting Book Recommendation server...")
+    logger.info("[Flask] Starting Book Recommendation server...")
     app.run(debug=False)

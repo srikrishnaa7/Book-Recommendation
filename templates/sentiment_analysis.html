@@ -112,7 +112,7 @@
                     {% for book in books %}
                     <tr>
                         <td class="book-title-cell">
-                            <img src="{{ book.image }}" alt="{{ book.title }}" class="table-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';">
+                            <img src="{{ book.image }}" alt="{{ book.title }}" class="table-cover" onerror="this.onerror=null; this.src='/static/images/no-cover.jpg';">
                             <div>
                                 <strong>{{ book.title }}</strong>
                                 <span class="table-publisher">{{ book.publisher }} ({{ book.year }})</span>

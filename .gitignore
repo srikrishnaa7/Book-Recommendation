@@ -10,9 +10,8 @@ venv/
 .vscode/
 .idea/
 
-# Generated cache/models
-data/model_cache/
-*.pkl
+# Generated cache/models - tracked for production deployment
+!data/model_cache/*.pkl
 
 # OS files
 .DS_Store

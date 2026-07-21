@@ -84,6 +84,10 @@ def analyze_books_sentiment(books_list):
             negative_count += 1
 
         book_copy = dict(book)
+        if not book_copy.get('description'):
+            publisher = book.get('publisher', 'Unknown Publisher')
+            year = book.get('year', 'N/A')
+            book_copy['description'] = f"A literary work titled '{title}' written by {author}, published by {publisher} ({year})."
         book_copy['sentiment'] = sentiment
         book_copy['sample_review'] = review_snippet
         enriched_books.append(book_copy)

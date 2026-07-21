@@ -1,10 +1,11 @@
 import os
 import pickle
+import logging
 import numpy as np
 import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.neighbors import NearestNeighbors
+
+logger = logging.getLogger(__name__)
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +39,7 @@ class BookRecommender:
         all_cached = all(os.path.exists(f) for f in cache_files)
 
         if all_cached:
-            print("[Recommender] Loading models from cache...")
+            logger.info("[Recommender] Loading models from cache...")
             with open(POPULAR_PKL, 'rb') as f:
                 self.popular_df = pickle.load(f)
             with open(PT_PKL, 'rb') as f:
@@ -53,9 +54,9 @@ class BookRecommender:
                 self.tfidf_matrix = pickle.load(f)
             with open(TITLES_PKL, 'rb') as f:
                 self.all_titles = pickle.load(f)
-            print(f"[Recommender] Cache loaded successfully. Available popular books: {len(self.popular_df)}")
+            logger.info(f"[Recommender] Cache loaded successfully. Available popular books: {len(self.popular_df)}")
         else:
-            print("[Recommender] Cache missing. Building recommendation models from CSVs...")
+            logger.info("[Recommender] Cache missing. Building recommendation models from CSVs...")
             self.build_models()
 
     def build_models(self):
@@ -106,6 +107,7 @@ class BookRecommender:
         pt.fillna(0, inplace=True)
         self.pt = pt
 
+        from sklearn.metrics.pairwise import cosine_similarity
         self.similarity_scores = cosine_similarity(pt)
 
         # 3. Clean Books DF for Metadata Lookups
@@ -135,17 +137,18 @@ class BookRecommender:
         with open(TITLES_PKL, 'wb') as f:
             pickle.dump(self.all_titles, f)
 
-        print("[Recommender] Models built and cached successfully!")
+        logger.info("[Recommender] Models built and cached successfully!")
 
     def get_popular_books(self, top_n=50):
         records = self.popular_df.head(top_n).to_dict(orient='records')
         results = []
         for r in records:
             desc = r.get('description') or r.get('Description') if ('description' in r or 'Description' in r) else None
+            img = r.get('Image-URL-L') or r.get('Image-URL-M') or '/static/images/no-cover.jpg'
             results.append({
                 'title': r['Book-Title'],
                 'author': r['Book-Author'],
-                'image': r.get('Image-URL-L') or r.get('Image-URL-M'),
+                'image': img,
                 'num_ratings': int(r['num_ratings']),
                 'avg_rating': float(r['avg_rating']),
                 'year': r.get('Year-Of-Publication', 'N/A'),
@@ -159,10 +162,11 @@ class BookRecommender:
         if not match.empty:
             row = match.iloc[0]
             desc = row.get('description') or row.get('Description') if ('description' in row or 'Description' in row) else None
+            img = row.get('Image-URL-L') or row.get('Image-URL-M') or '/static/images/no-cover.jpg'
             return {
                 'title': row['Book-Title'],
                 'author': row['Book-Author'],
-                'image': row.get('Image-URL-L') or row.get('Image-URL-M'),
+                'image': img,
                 'year': row.get('Year-Of-Publication', 'N/A'),
                 'publisher': row.get('Publisher', 'Unknown'),
                 'description': desc
@@ -170,7 +174,7 @@ class BookRecommender:
         return {
             'title': book_title,
             'author': 'Unknown',
-            'image': 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80',
+            'image': '/static/images/no-cover.jpg',
             'year': 'N/A',
             'publisher': 'Unknown',
             'description': None
@@ -203,7 +207,7 @@ class BookRecommender:
 
         # Case 2: Content-Based TF-IDF Match across full dataset
         query_vec = self.tfidf_vectorizer.transform([query])
-        sim_scores = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
+        sim_scores = (self.tfidf_matrix * query_vec.T).toarray().flatten()
         top_indices = sim_scores.argsort()[::-1][:top_n]
 
         recommendations = []
@@ -211,10 +215,11 @@ class BookRecommender:
             score = sim_scores[idx]
             if score > 0:
                 row = self.books_df.iloc[idx]
+                img = row.get('Image-URL-L') or row.get('Image-URL-M') or '/static/images/no-cover.jpg'
                 details = {
                     'title': row['Book-Title'],
                     'author': row['Book-Author'],
-                    'image': row.get('Image-URL-L') or row.get('Image-URL-M'),
+                    'image': img,
                     'year': row.get('Year-Of-Publication', 'N/A'),
                     'publisher': row.get('Publisher', 'Unknown'),
                     'score': round(float(score) * 100, 1),
