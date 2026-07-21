@@ -11,7 +11,6 @@ A Machine Learning based Book Recommendation System developed using **Python** a
 - ⭐ Display similar books instantly
 - 🖼️ Show book cover images
 - 🌐 Simple and interactive web interface
-- ☁️ Ready for deployment using Render
 
 ---
 
