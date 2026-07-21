@@ -1,17 +1,17 @@
 # 📚 Book Recommendation System
 
-A content-based Book Recommendation System built using **Python**, **Flask**, **Pandas**, and **Scikit-learn**. The application recommends books similar to the one selected by the user using machine learning techniques.
+A Machine Learning based Book Recommendation System developed using **Python** and **Flask**. The application recommends books similar to the selected book using collaborative filtering and cosine similarity.
 
 ---
 
 ## 🚀 Features
 
-- 📖 Recommend books based on similarity
-- 🔍 Search for books by title
-- 🖼️ Display book covers
-- ⭐ Show top recommended books
-- 🌐 Simple and responsive Flask web interface
-- ⚡ Fast recommendation using precomputed similarity matrix
+- 📖 Recommend books based on user ratings
+- 🔍 Search books by title
+- ⭐ Display similar books instantly
+- 🖼️ Show book cover images
+- 🌐 Simple and interactive web interface
+- ☁️ Ready for deployment using Render
 
 ---
 
@@ -31,8 +31,8 @@ A content-based Book Recommendation System built using **Python**, **Flask**, **
 - CSS
 - Bootstrap
 
-### Dataset
-- Book-Crossing Dataset
+### Deployment
+- Render
 
 ---
 
@@ -41,78 +41,67 @@ A content-based Book Recommendation System built using **Python**, **Flask**, **
 ```
 Book-Recommendation/
 │
-├── static/
-│   ├── css/
-│   └── images/
+├── data/                  # Dataset files
+├── src/                   # Model training and preprocessing scripts
+├── static/                # CSS, images and static files
+├── templates/             # HTML templates
 │
-├── templates/
-│   ├── index.html
-│   └── recommend.html
-│
-├── app.py
-├── requirements.txt
-├── popular.pkl
-├── pt.pkl
-├── books.pkl
-├── similarity_scores.pkl
+├── app.py                 # Flask application
+├── requirements.txt       # Python dependencies
+├── render.yaml            # Render deployment configuration
+├── .gitignore
 └── README.md
 ```
 
 ---
 
-## ⚙️ How It Works
+## ⚙️ Installation
 
-1. Load the processed book dataset.
-2. Create a user-book matrix.
-3. Calculate similarity between books using Cosine Similarity.
-4. When a user selects a book, retrieve the most similar books.
-5. Display the recommended books along with their cover images.
-
----
-
-## 💻 Installation
-
-### 1. Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/srikrishnaa7/Book-Recommendation.git
 ```
 
-### 2. Navigate to the project
-
 ```bash
 cd Book-Recommendation
 ```
 
-### 3. Create a virtual environment (Optional)
+---
 
-**Windows**
+### Create a Virtual Environment (Optional)
+
+Windows
 
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-**Linux / macOS**
+Linux/macOS
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 4. Install dependencies
+---
+
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Run the application
+---
+
+### Run the Application
 
 ```bash
 python app.py
 ```
 
-Open your browser and visit:
+Open your browser and visit
 
 ```
 http://127.0.0.1:5000
@@ -120,48 +109,40 @@ http://127.0.0.1:5000
 
 ---
 
+## 🧠 Recommendation Algorithm
 
-## 📊 Machine Learning Approach
+This project uses **Collaborative Filtering** to recommend books.
 
-The recommendation engine uses **Collaborative Filtering** based on user ratings.
-
-Steps involved:
+The workflow includes:
 
 - Data Cleaning
-- Filtering active users
-- Creating User-Item Matrix
-- Pivot Table Generation
-- Cosine Similarity
-- Recommendation Generation
+- User Rating Filtering
+- User-Book Pivot Table
+- Cosine Similarity Calculation
+- Top Similar Book Recommendations
 
 ---
 
-## 📦 Requirements
+## 📁 Dataset
 
-```
-Flask
-NumPy
-Pandas
-Scikit-learn
-Pickle
-```
+The project uses the **Book-Crossing Dataset**, which contains:
 
-Install all dependencies using:
-
-```bash
-pip install -r requirements.txt
-```
+- Books
+- Users
+- Ratings
 
 ---
 
-## 🎯 Future Improvements
 
-- User Login & Authentication
+## 📌 Future Improvements
+
+- User authentication
 - Personalized recommendations
-- Book genre filtering
+- Genre-based filtering
 - Search autocomplete
-- Recommendation history
-- Deploy on Render / Railway / AWS
+- Book details page
+- Dark mode
+- Deploy with Docker
 
 ---
 
@@ -173,12 +154,39 @@ pip install -r requirements.txt
 
 ---
 
-## ⭐ If you like this project
+## 🤝 Contributing
 
-Give this repository a ⭐ on GitHub and feel free to contribute!
+Contributions are welcome!
+
+1. Fork the repository
+2. Create your feature branch
+
+```bash
+git checkout -b feature-name
+```
+
+3. Commit your changes
+
+```bash
+git commit -m "Add new feature"
+```
+
+4. Push to the branch
+
+```bash
+git push origin feature-name
+```
+
+5. Open a Pull Request
 
 ---
 
-## 📜 License
+## ⭐ Show your support
 
-This project is for educational purposes.
+If you found this project useful, consider giving it a ⭐ on GitHub.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
